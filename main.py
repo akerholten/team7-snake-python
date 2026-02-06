@@ -55,6 +55,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
     grid_spots_reward = [[0 for _ in range(board_width)] for _ in range(board_height)]
     safety_level = [[10 for _ in range(board_width)] for _ in range(board_width)]
 
+    for food in game_state["board"]["food"]:
+        grid_spots_reward[food["x"]][food["y"]] = 5
+        
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
         for position in snake["body"]:
@@ -72,15 +75,25 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if is_head_position_of_enemy(game_state["you"], snake, position["x"], position["y"]): 
                 # Calculate next move of enemy snake, and if we are longer, then this position is safe, otherwise risky
                 if snake["length"] >= game_state["you"]["length"]:
-                    if (position["x"]+1 < board_width):
+                    if not is_out_of_bounds(board_width, board_height, position["x"]+1, position["y"]):
                         grid_spots_risk[position["x"]+1][position["y"]] = 9
-                    if (position["x"]-1 >= 0):
+                    if not is_out_of_bounds(board_width, board_height, position["x"]-1, position["y"]):
                         grid_spots_risk[position["x"]-1][position["y"]] = 9
-                    if (position["y"]+1 < board_height):
+                    if not is_out_of_bounds(board_width, board_height, position["x"], position["y"]+1):
                         grid_spots_risk[position["x"]][position["y"]+1] = 9
-                    if (position["y"]-1 >= 0):
+                    if not is_out_of_bounds(board_width, board_height, position["x"], position["y"]-1):
                         grid_spots_risk[position["x"]][position["y"]-1] = 9
-
+                else:
+                    if not is_out_of_bounds(board_width, board_height, position["x"]+1, position["y"]):
+                        grid_spots_reward[position["x"]+1][position["y"]] = 10
+                    if not is_out_of_bounds(board_width, board_height, position["x"]-1, position["y"]):
+                        grid_spots_reward[position["x"]-1][position["y"]] = 10
+                    if not is_out_of_bounds(board_width, board_height, position["x"], position["y"]+1):
+                        grid_spots_reward[position["x"]][position["y"]+1] = 10
+                    if not is_out_of_bounds(board_width, board_height, position["x"], position["y"]-1):
+                        grid_spots_reward[position["x"]][position["y"]-1] = 10
+                    
+                    
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
         for position in snake["body"]:
@@ -120,19 +133,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
     move_ranking = {"up": 10, "down": 10, "left": 10, "right": 10}
 
     if is_move_safe["right"]:
-        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]]
+        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]] - grid_spots_reward[my_head["x"] + 1][my_head["y"]]
         if move_ranking["right"] == 10:
             is_move_safe["right"] = False
     if is_move_safe["left"]:
-        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]]
+        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]] - grid_spots_reward[my_head["x"] - 1][my_head["y"]]
         if move_ranking["left"] == 10:
             is_move_safe["left"] = False
     if is_move_safe["up"]:
-        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1]
+        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1] - grid_spots_reward[my_head["x"]][my_head["y"] + 1]
         if move_ranking["up"] == 10:
             is_move_safe["up"] = False
     if is_move_safe["down"]:
-        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]
+        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]  -  grid_spots_reward[my_head["x"]][my_head["y"] - 1]
         if move_ranking["down"] == 10:
             is_move_safe["down"] = False
 
@@ -179,6 +192,11 @@ def is_head_position_of_enemy(me, snake, x: int, y: int) -> bool:
         return False
     
     if snake["head"]["x"] == x and snake["head"]["y"] == y:
+        return True
+    return False
+
+def is_out_of_bounds(board_width: int, board_height: int, x: int, y: int) -> bool:
+    if x < 0 or x >= board_width or y < 0 or y >= board_height:
         return True
     return False
 
