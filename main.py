@@ -46,6 +46,30 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     is_move_safe = {"up": True, "down": True, "left": True, "right": True}
 
+    grid_spots_risk = [[0 for _ in range(11)] for _ in range(11)]
+    grid_spots_reward = [[0 for _ in range(11)] for _ in range(11)]
+    safety_level = [[10 for _ in range(11)] for _ in range(11)]
+
+    # Populate gridspots with enemy snakes
+    for snake in game_state["board"]["snakes"]:
+        for position in snake["body"]:
+            # TODO: If this position is head position of enemy snake, and we are longer = safe
+            # TODO: Tail position of enemy snake
+            
+            # TODO: Own tail position is safe
+            grid_spots_risk[position["x"]][position["y"]] = 10
+
+
+
+    # Populate gridspots with enemy snakes
+    for snake in game_state["board"]["snakes"]:
+        for position in snake["body"]:
+            # TODO: If this position is head position of enemy snake, and we are longer = safe
+            grid_spots_risk[position["x"]][position["y"]] = 10
+
+
+
+
     # We've included code to prevent your Battlesnake from moving backwards
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
     my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
@@ -63,20 +87,58 @@ def move(game_state: typing.Dict) -> typing.Dict:
         is_move_safe["up"] = False
 
     # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    # board_width = game_state['board']['width']
-    # board_height = game_state['board']['height']
+    board_width = game_state['board']['width']
+    board_height = game_state['board']['height']
 
-    # TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    # my_body = game_state['you']['body']
+    if my_head["x"] == board_width - 1:
+        is_move_safe["right"] = False
+    if my_head["y"] == board_height - 1:
+        is_move_safe["up"] = False
+    if my_head["x"] == 0:
+        is_move_safe["left"] = False
+    if my_head["y"] == 0:
+        is_move_safe["down"] = False
 
-    # TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-    # opponents = game_state['board']['snakes']
+    #
+    if is_move_safe["right"]:
+        if grid_spots[my_head["x"] + 0][my_head["y"]] == "unsafe":
+            is_move_safe["left"] = False
+    if is_move_safe["left"]:
+        if grid_spots[my_head["x"] - 0][my_head["y"]] == "unsafe":
+            is_move_safe["left"] = False
+    if is_move_safe["up"]:
+        if grid_spots[my_head["x"]][my_head["y"] + 0] == "unsafe":
+            is_move_safe["up"] = False
+    if is_move_safe["down"]:
+        if grid_spots[my_head["x"]][my_head["y"] - 0] == "unsafe":
+            is_move_safe["down"] = False
+
+    # Check our next position with available remaining safe moves against grid_spots
+    move_ranking = {"up": 10, "down": 10, "left": 10, "right": 10}
+
+    if is_move_safe["right"]:
+        move_ranking["right"] = calculate_gridspot_safety(my_head["x"] + 1, my_head["y"])
+
+    if is_move_safe["left"]:
+        if grid_spots[my_head["x"] - 1][my_head["y"]] == "unsafe":
+            is_move_safe["left"] = False
+    if is_move_safe["up"]:
+        if grid_spots[my_head["x"]][my_head["y"] + 1] == "unsafe":
+            is_move_safe["up"] = False
+    if is_move_safe["down"]:
+        if grid_spots[my_head["x"]][my_head["y"] - 1] == "unsafe":
+            is_move_safe["down"] = False
+
+
 
     # Are there any safe moves left?
     safe_moves = []
     for move, isSafe in is_move_safe.items():
         if isSafe:
             safe_moves.append(move)
+
+    print(f"Head position: {my_head}")
+    print(f"Safe moves: {safe_moves}")
 
     if len(safe_moves) == 0:
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
@@ -90,6 +152,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
+
+def is_tail_position(var: snake, x: int, y: int):
+
+#def calculate_gridspot_safety(x: int, y: int):
+
+
+
+
+
 
 
 # Start server when `python main.py` is run
