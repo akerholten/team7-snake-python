@@ -132,19 +132,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
     move_ranking = {"up": 10, "down": 10, "left": 10, "right": 10}
 
     if is_move_safe["right"]:
-        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]]
+        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]] - grid_spots_reward[my_head["x"] + 1][my_head["y"]]
         if move_ranking["right"] == 10:
             is_move_safe["right"] = False
     if is_move_safe["left"]:
-        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]]
+        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]] - grid_spots_reward[my_head["x"] - 1][my_head["y"]]
         if move_ranking["left"] == 10:
             is_move_safe["left"] = False
     if is_move_safe["up"]:
-        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1]
+        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1] - grid_spots_reward[my_head["x"]][my_head["y"] + 1]
         if move_ranking["up"] == 10:
             is_move_safe["up"] = False
     if is_move_safe["down"]:
-        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]
+        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]  -  grid_spots_reward[my_head["x"]][my_head["y"] - 1]
         if move_ranking["down"] == 10:
             is_move_safe["down"] = False
 
@@ -198,6 +198,7 @@ def is_out_of_bounds(board_width: int, board_height: int, x: int, y: int) -> boo
     if x < 0 or x >= board_width or y < 0 or y >= board_height:
         return True
     return False
+
 #def calculate_gridspot_safety(x: int, y: int):
 
 
