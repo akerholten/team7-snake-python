@@ -134,11 +134,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     return {"move": next_move}
 
 def is_tail_position(snake, x: int, y: int):
-   bodyNumber = 0
-   for body in snake["body"]:
-        bodyNumber += 1
-        if bodyNumber == len(body):
-            return True
+    tail = snake["body"][-1]
+    return tail["x"] == x and tail["y"] == y
 
 def is_head_position_of_enemy(me, snake, x: int, y: int) -> bool:
     if snake["id"] == me["id"]:

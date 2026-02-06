@@ -10,7 +10,7 @@ def a_star(start, goal, board_width: int, board_height: int, board_risks, board_
     g_score = defaultdict(lambda: float('inf'))
     g_score[start] = 0
 
-    MAX_STEPS = 7
+    MAX_STEPS = 20
 
     best_node = None
     while open_set:
@@ -22,7 +22,11 @@ def a_star(start, goal, board_width: int, board_height: int, board_risks, board_
         if g_score[current] > MAX_STEPS:
             continue
 
-        if best_node is None or heuristic(current, goal) < heuristic(best_node, goal):
+        if best_node is None or (
+            heuristic(current, goal) < heuristic(best_node, goal)
+            or (heuristic(current, goal) == heuristic(best_node, goal)
+                and g_score[current] < g_score[best_node])
+        ):
             best_node = current
 
         if current == goal:
@@ -79,8 +83,7 @@ def cost(current, neighbor, board_risks, board_rewards):
     return movement_cost_between(current, neighbor, board_risks, board_rewards)
 
 def movement_cost_between(current, neighbor, board_risks, board_rewards):
-    # TODO: add all our calculations here based on risk
-    return board_risks[neighbor[0]][neighbor[1]] - board_rewards[neighbor[0]][neighbor[1]]
+    return max(1, 1 + board_risks[neighbor[0]][neighbor[1]] - board_rewards[neighbor[0]][neighbor[1]])
 
 def reconstruct_path(came_from, current):
     path = [current]
