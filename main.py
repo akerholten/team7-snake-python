@@ -55,11 +55,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         for position in snake["body"]:
             # TODO: If this position is head position of enemy snake, and we are longer = safe
             # TODO: Tail position of enemy snake
-            
-            # TODO: Own tail position is safe
             grid_spots_risk[position["x"]][position["y"]] = 10
 
-
+            if is_tail_position(snake, position["x"], position["y"]):
+                grid_spots_risk[position["x"]][position["y"]] -= 5
+            # TODO: Own tail position is safe
 
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
@@ -99,37 +99,25 @@ def move(game_state: typing.Dict) -> typing.Dict:
     if my_head["y"] == 0:
         is_move_safe["down"] = False
 
-    #
-    if is_move_safe["right"]:
-        if grid_spots[my_head["x"] + 0][my_head["y"]] == "unsafe":
-            is_move_safe["left"] = False
-    if is_move_safe["left"]:
-        if grid_spots[my_head["x"] - 0][my_head["y"]] == "unsafe":
-            is_move_safe["left"] = False
-    if is_move_safe["up"]:
-        if grid_spots[my_head["x"]][my_head["y"] + 0] == "unsafe":
-            is_move_safe["up"] = False
-    if is_move_safe["down"]:
-        if grid_spots[my_head["x"]][my_head["y"] - 0] == "unsafe":
-            is_move_safe["down"] = False
-
     # Check our next position with available remaining safe moves against grid_spots
     move_ranking = {"up": 10, "down": 10, "left": 10, "right": 10}
 
     if is_move_safe["right"]:
-        move_ranking["right"] = calculate_gridspot_safety(my_head["x"] + 1, my_head["y"])
-
+        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]]
+        if move_ranking["right"] == 10:
+            is_move_safe["right"] = False
     if is_move_safe["left"]:
-        if grid_spots[my_head["x"] - 1][my_head["y"]] == "unsafe":
+        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]]
+        if move_ranking["left"] == 10:
             is_move_safe["left"] = False
     if is_move_safe["up"]:
-        if grid_spots[my_head["x"]][my_head["y"] + 1] == "unsafe":
+        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1]
+        if move_ranking["up"] == 10:
             is_move_safe["up"] = False
     if is_move_safe["down"]:
-        if grid_spots[my_head["x"]][my_head["y"] - 1] == "unsafe":
+        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]
+        if move_ranking["down"] == 10:
             is_move_safe["down"] = False
-
-
 
     # Are there any safe moves left?
     safe_moves = []
@@ -145,7 +133,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return {"move": "down"}
 
     # Choose a random move from the safe ones
-    next_move = random.choice(safe_moves)
+    bestMoveRanking = 10
+    for move in safe_moves:
+        if move_ranking[move] < bestMoveRanking:
+            next_move = move
+            bestMoveRanking = move_ranking[move]
+
+    #next_move = random.choice(safe_moves)
 
     # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
     # food = game_state['board']['food']
@@ -153,7 +147,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
 
-def is_tail_position(var: snake, x: int, y: int):
+def is_tail_position(snake, x: int, y: int):
+   bodyNumber = 0
+   for body in snake["body"]:
+        bodyNumber += 1
+        if bodyNumber == len(body):
+            return True
+        
 
 #def calculate_gridspot_safety(x: int, y: int):
 
