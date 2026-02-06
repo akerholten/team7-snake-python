@@ -46,9 +46,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     is_move_safe = {"up": True, "down": True, "left": True, "right": True}
 
-    grid_spots_risk = [[0 for _ in range(11)] for _ in range(11)]
-    grid_spots_reward = [[0 for _ in range(11)] for _ in range(11)]
-    safety_level = [[10 for _ in range(11)] for _ in range(11)]
+    # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
+    board_width = game_state['board']['width']
+    board_height = game_state['board']['height']
+
+    grid_spots_risk = [[0 for _ in range(board_width)] for _ in range(board_height)]
+    grid_spots_reward = [[0 for _ in range(board_width)] for _ in range(board_height)]
+    safety_level = [[10 for _ in range(board_width)] for _ in range(board_width)]
 
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
@@ -86,10 +90,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     elif my_neck["y"] > my_head["y"]:  # Neck is above head, don't move up
         is_move_safe["up"] = False
 
-    # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    board_width = game_state['board']['width']
-    board_height = game_state['board']['height']
-
+    
     if my_head["x"] == board_width - 1:
         is_move_safe["right"] = False
     if my_head["y"] == board_height - 1:
@@ -134,12 +135,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     # Choose a random move from the safe ones
     bestMoveRanking = 10
+    bestMoves = []
     for move in safe_moves:
         if move_ranking[move] < bestMoveRanking:
-            next_move = move
             bestMoveRanking = move_ranking[move]
+            bestMoves = [move]
+        elif move_ranking[move] == bestMoveRanking:
+            bestMoves.append(move)
 
-    #next_move = random.choice(safe_moves)
+    next_move = random.choice(bestMoves)
 
     # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
     # food = game_state['board']['food']
