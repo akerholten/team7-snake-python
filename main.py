@@ -12,6 +12,7 @@
 
 import random
 import typing
+from astar import a_star
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -192,5 +193,13 @@ def is_head_position_of_enemy(me, snake, x: int, y: int) -> bool:
 # Start server when `python main.py` is run
 if __name__ == "__main__":
     from server import run_server
+    
+    #def a_star(start, goal, board_width: int, board_height: int, board_costs):
+
+    board_costs = [[1 for _ in range(11)] for _ in range(11)]
+    
+    path = a_star((0, 0), (5, 5), 11, 11, board_costs)
+
+    print(f"a star path: {path}")
 
     run_server({"info": info, "start": start, "move": move, "end": end})
