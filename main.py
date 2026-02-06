@@ -55,7 +55,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     grid_spots_reward = [[0 for _ in range(board_width)] for _ in range(board_height)]
     safety_level = [[10 for _ in range(board_width)] for _ in range(board_width)]
 
-    for food in game_state["board"]["food"]:
+    for food in game_state["board"]["food"]:        
         grid_spots_reward[food["x"]][food["y"]] = 5
         
     # Populate gridspots with enemy snakes
@@ -63,7 +63,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         for position in snake["body"]:
             
             # TODO: Tail position of enemy snake
-            grid_spots_risk[position["x"]][position["y"]] = 10
+            grid_spots_risk[position["x"]][position["y"]] = 100
 
             if is_tail_position(snake, position["x"], position["y"]):
                 grid_spots_risk[position["x"]][position["y"]] -= 5
@@ -94,15 +94,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         grid_spots_reward[position["x"]][position["y"]-1] = 10
                     
                     
-    # Populate gridspots with enemy snakes
-    for snake in game_state["board"]["snakes"]:
-        for position in snake["body"]:
-            # TODO: If this position is head position of enemy snake, and we are longer = safe
-            grid_spots_risk[position["x"]][position["y"]] = 10
-
-
-
-
     # We've included code to prevent your Battlesnake from moving backwards
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
     my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
@@ -119,60 +110,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
     elif my_neck["y"] > my_head["y"]:  # Neck is above head, don't move up
         is_move_safe["up"] = False
 
+    food = game_state["board"]["food"][0]
+
+    destination = (5, 5)
+    if food is not None:
+        destination = (food["x"], food["y"])
+
+    print(f"destination: {destination}")
     
-    if my_head["x"] == board_width - 1:
-        is_move_safe["right"] = False
-    if my_head["y"] == board_height - 1:
-        is_move_safe["up"] = False
-    if my_head["x"] == 0:
-        is_move_safe["left"] = False
-    if my_head["y"] == 0:
-        is_move_safe["down"] = False
+    path, cost = a_star((my_head["x"], my_head["y"]), destination, board_width, board_height, grid_spots_risk, grid_spots_reward)
+    
+    print(f"path: {path}, cost: {cost}")
 
-    # Check our next position with available remaining safe moves against grid_spots
-    move_ranking = {"up": 10, "down": 10, "left": 10, "right": 10}
-
-    if is_move_safe["right"]:
-        move_ranking["right"] = grid_spots_risk[my_head["x"] + 1][my_head["y"]] - grid_spots_reward[my_head["x"] + 1][my_head["y"]]
-        if move_ranking["right"] == 10:
-            is_move_safe["right"] = False
-    if is_move_safe["left"]:
-        move_ranking["left"] = grid_spots_risk[my_head["x"] - 1][my_head["y"]] - grid_spots_reward[my_head["x"] - 1][my_head["y"]]
-        if move_ranking["left"] == 10:
-            is_move_safe["left"] = False
-    if is_move_safe["up"]:
-        move_ranking["up"] = grid_spots_risk[my_head["x"]][my_head["y"] + 1] - grid_spots_reward[my_head["x"]][my_head["y"] + 1]
-        if move_ranking["up"] == 10:
-            is_move_safe["up"] = False
-    if is_move_safe["down"]:
-        move_ranking["down"] = grid_spots_risk[my_head["x"]][my_head["y"] - 1]  -  grid_spots_reward[my_head["x"]][my_head["y"] - 1]
-        if move_ranking["down"] == 10:
-            is_move_safe["down"] = False
-
-    # Are there any safe moves left?
-    safe_moves = []
-    for move, isSafe in is_move_safe.items():
-        if isSafe:
-            safe_moves.append(move)
-
-    print(f"Head position: {my_head}")
-    print(f"Safe moves: {safe_moves}")
-
-    if len(safe_moves) == 0:
-        print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
-        return {"move": "down"}
-
-    # Choose a random move from the safe ones
-    bestMoveRanking = 10
-    bestMoves = []
-    for move in safe_moves:
-        if move_ranking[move] < bestMoveRanking:
-            bestMoveRanking = move_ranking[move]
-            bestMoves = [move]
-        elif move_ranking[move] == bestMoveRanking:
-            bestMoves.append(move)
-
-    next_move = random.choice(bestMoves)
+    if len(path) <= 1:
+        return {"move": "down"} 
+    
+    next_move = map_to_direction(path[0], path[1])
 
     # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
     # food = game_state['board']['food']
@@ -202,8 +155,18 @@ def is_out_of_bounds(board_width: int, board_height: int, x: int, y: int) -> boo
 
 #def calculate_gridspot_safety(x: int, y: int):
 
-
-
+def map_to_direction(currentPos, nextPos):
+    dirx = nextPos[0] - currentPos[0]
+    if dirx == 1:
+        return "right"
+    elif dirx == -1:
+        return "left"
+    
+    diry = nextPos[1] - currentPos[1]
+    if diry == 1:
+        return "up"
+    else:
+        return "down"
 
 
 
@@ -211,13 +174,5 @@ def is_out_of_bounds(board_width: int, board_height: int, x: int, y: int) -> boo
 # Start server when `python main.py` is run
 if __name__ == "__main__":
     from server import run_server
-    
-    #def a_star(start, goal, board_width: int, board_height: int, board_costs):
-
-    board_costs = [[1 for _ in range(11)] for _ in range(11)]
-    
-    path = a_star((0, 0), (5, 5), 11, 11, board_costs)
-
-    print(f"a star path: {path}")
 
     run_server({"info": info, "start": start, "move": move, "end": end})
