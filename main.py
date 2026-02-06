@@ -57,13 +57,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
         for position in snake["body"]:
-            # TODO: If this position is head position of enemy snake, and we are longer = safe
+            
             # TODO: Tail position of enemy snake
             grid_spots_risk[position["x"]][position["y"]] = 10
 
             if is_tail_position(snake, position["x"], position["y"]):
                 grid_spots_risk[position["x"]][position["y"]] -= 5
-            # TODO: Own tail position is safe
+            
+            if is_tail_position(game_state["you"], position["x"], position["y"]):
+                grid_spots_risk[position["x"]][position["y"]] = 0
+                # TODO: Own tail is safe, unless another snake is about to move there, then it becomes risky
+
+            if is_head_position_of_enemy(game_state["you"], snake, position["x"], position["y"]): 
+                # Calculate next move of enemy snake, and if we are longer, then this position is safe, otherwise risky
+                if snake["length"] >= game_state["you"]["length"]:
+                    if (position["x"]+1 < board_width):
+                        grid_spots_risk[position["x"]+1][position["y"]] = 9
+                    if (position["x"]-1 >= 0):
+                        grid_spots_risk[position["x"]-1][position["y"]] = 9
+                    if (position["y"]+1 < board_height):
+                        grid_spots_risk[position["x"]][position["y"]+1] = 9
+                    if (position["y"]-1 >= 0):
+                        grid_spots_risk[position["x"]][position["y"]-1] = 9
 
     # Populate gridspots with enemy snakes
     for snake in game_state["board"]["snakes"]:
@@ -157,7 +172,14 @@ def is_tail_position(snake, x: int, y: int):
         bodyNumber += 1
         if bodyNumber == len(body):
             return True
-        
+
+def is_head_position_of_enemy(me, snake, x: int, y: int) -> bool:
+    if snake["id"] == me["id"]:
+        return False
+    
+    if snake["head"]["x"] == x and snake["head"]["y"] == y:
+        return True
+    return False
 
 #def calculate_gridspot_safety(x: int, y: int):
 
